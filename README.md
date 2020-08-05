@@ -3,8 +3,6 @@ NeuroCore is an PyTorch implementation of a Predictive Visual Model for robotics
 
 Author : Munch Quentin, 2020
 
-Simple visual "cortex" for robot application
-
 Reference :
 
 - David J. Heeger. Theory of cortical function. 21 Feb 2017, PNAS vol.114 N°8 p.1773–1782.
