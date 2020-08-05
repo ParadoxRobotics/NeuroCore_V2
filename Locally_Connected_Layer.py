@@ -1,4 +1,3 @@
-
 #    _   __                      ______
 #   / | / /__  __  ___________  / ____/___  ________
 #  /  |/ / _ \/ / / / ___/ __ \/ /   / __ \/ ___/ _ \
@@ -9,19 +8,6 @@
 # applications (tracking, recognition, manipulation,...)
 
 # Author : Munch Quentin, 2020
-
-"""
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
 
 import numpy as np
 import torch
@@ -43,6 +29,7 @@ class LocallyConnected2D(nn.Module):
         self.stride = stride
         # Calculate desired output shape
         self.outputHeight, self.outputWidth = self.calculate_spatial_output_shape(self.inputShape, self.kernelSize, self.dilation, self.padding, self.stride)
+        print(self.outputHeight, self.outputWidth)
         self.weightTensorDepth = self.inChannels * self.kernelSize[0] * self.kernelSize[1]
         self.spatialBlocksSize = self.outputHeight * self.outputWidth
         # init weight and bias
@@ -52,35 +39,15 @@ class LocallyConnected2D(nn.Module):
         torch.nn.init.xavier_uniform_(self.bias)
 
     def forward(self, input):
-        # Perform Vol2Col operation on the input feature given kernel, stride, padding and dilation size
+        # Perform Vol2Col/Im2Col operation on the input feature given kernel, stride, padding and dilation size
         inputUnfold = torch.nn.functional.unfold(input, self.kernelSize, dilation=self.dilation, padding=self.padding, stride=self.stride)
         # Apply the weight to the unfolded image
         localOpUnfold = (inputUnfold.view((*inputUnfold.shape, 1)) * self.weights)
         return localOpUnfold.sum(dim=1).transpose(2, 1).reshape((-1, self.outChannels, self.outputHeight, self.outputWidth)) + self.bias
 
-# Transposed locally connected Layer
-class TransposedLocallyConnected2D(nn.Module):
-    def calculate_spatial_transposed_output_shape(self, inputShape, kernelSize, dilation, inputPadding, outPadding, stride):
-        return [np.floor((inputShape[index]-1)*stride[index]-2*inputPadding[index]+dilation[index]*kernelSize[index]-1+outPadding[index]+1).astype(int) for index in range(len(inputShape))]
-    def __init__(self, inputShape, inChannels, outChannels, kernelSize, dilation, inputPadding, outPadding, stride):
-        super().__init__()
-        self.inputShape = inputShape
-        self.inChannels = inChannels
-        self.outChannels = outChannels
-        self.kernelSize = kernelSize
-        self.dilation = dilation
-        self.inputPadding = inputPadding
-        self.outPadding = outPadding
-        self.stride = stride
-        # calculate desired output shape
-        self.outputHeight, self.outputWidth = self.calculate_spatial_transposed_output_shape(self.inputShape, self.kernelSize, self.dilation, self.inputPadding, self.outPadding, self.stride)
-        self.weightTensorDepth = self.outChannels * self.kernelSize[0] * self.kernelSize[1]
-        self.spatialBlocksSize = self.outputHeight * self.outputWidth
-        # init weight and bias
-        self.weights = nn.Parameter(torch.empty((1, self.weightTensorDepth, self.spatialBlocksSize, self.inChannels),requires_grad=True, dtype=torch.float))
-        torch.nn.init.xavier_uniform_(self.weights)
-        self.bias = nn.Parameter(torch.empty((1, outChannels, self.outputHeight, self.outputWidth),requires_grad=True, dtype=torch.float))
-        torch.nn.init.xavier_uniform_(self.bias)
-
-    def forward(self, input):
-        # Perform Col2Vol operation on the input feature given kernel, stride, padding and dilation size
+# Exemple test :
+# distributed locally connected layer where there is no overlaping over the receptive field
+inLayer = LocallyConnected2D(inputShape=[128,128], inChannels=3, outChannels=49, kernelSize=[5,5], dilation=[1,1], padding=[0,0], stride=[5,5])
+errorLayer = LocallyConnected2D(inputShape=[128,128], inChannels=3, outChannels=49, kernelSize=[5,5], dilation=[1,1], padding=[0,0], stride=[5,5])
+# locally connected lateral/recurrent connection -> each neuron see the prevous state of their neighbor (RF = 5X5)
+latRLayer = LocallyConnected2D(inputShape=[25,25], inChannels=49, outChannels=49, kernelSize=[5,5], dilation=[1,1], padding=[2,2], stride=[1,1])
