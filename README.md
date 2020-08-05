@@ -1,13 +1,11 @@
-#    _   __                      ______
-#   / | / /__  __  ___________  / ____/___  ________
-#  /  |/ / _ \/ / / / ___/ __ \/ /   / __ \/ ___/ _ \
-# / /|  /  __/ /_/ / /  / /_/ / /___/ /_/ / /  /  __/
-#/_/ |_/\___/\__,_/_/   \____/\____/\____/_/   \___/
+    _   __                      ______
+   / | / /__  __  ___________  / ____/___  ________
+  /  |/ / _ \/ / / / ___/ __ \/ /   / __ \/ ___/ _ \
+ / /|  /  __/ /_/ / /  / /_/ / /___/ /_/ / /  /  __/
+/_/ |_/\___/\__,_/_/   \____/\____/\____/_/   \___/
 
-# NeuroCore is an PyTorch implementation of a Predictive Visual Model for robotics
-# applications (tracking, recognition, manipulation,...)
-
-# Author : Munch Quentin, 2020
+NeuroCore is an PyTorch implementation of a Predictive Visual Model for roboticsapplications (tracking, recognition, manipulation,...)
+Author : Munch Quentin, 2020
 
 Simple visual "cortex" for robot application
 
