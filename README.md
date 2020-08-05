@@ -17,8 +17,6 @@ Reference :
 
 - Micah Richert, Dimitry Fisher, Filip Piekniewski, Eugene M. Izhikevich and Todd L. Hylton. Fundamental principles of cortical computation: unsupervised learning with prediction, compression and feedback. 19 Aug 2016, arXiv:1608.06277.
 
-- Filip Piekniewski, Patryk Laurent, Csaba Petre, Micah Richert, Dimitry Fisher and Todd Hylton. Unsupervised Learning from Continuous Video in a Scalable Predictive Recurrent Network. 30 Sep 2016, arXiv:1607.06854.
-
 - Rajesh P. N. Rao & Dana H. Ballard. Predictive coding in the visual cortex: a functional interpretation of some extra-classical receptive-field effects. Nature Neuroscience volume 2, pages 79–87 (1999).
 
 - S. M. STRINGER, E. T. ROLLS, & J. M. TROMANS. Invariant object recognition with trace learning and multiple stimuli present during training. Network: Computation in Neural Systems, June 2007; 18(2): 161–187.
