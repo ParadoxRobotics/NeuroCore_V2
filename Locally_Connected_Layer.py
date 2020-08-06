@@ -20,7 +20,7 @@ class LocallyConnected2D(nn.Module):
     def calculate_spatial_output_shape(self, inputShape, kernelSize, dilation, padding, stride):
         return [np.floor(((inputShape[index]+2*padding[index]-dilation[index]*(kernelSize[index]-1)-1)/stride[index])+1).astype(int) for index in range(len(inputShape))]
     def __init__(self, inputShape, inChannels, outChannels, kernelSize, dilation, padding, stride):
-        super().__init__()
+        super(LocallyConnected2D, self).__init__()
         self.inputShape = inputShape
         self.inChannels = inChannels
         self.outChannels = outChannels
@@ -30,12 +30,10 @@ class LocallyConnected2D(nn.Module):
         self.stride = stride
         # Calculate desired output shape
         self.outputHeight, self.outputWidth = self.calculate_spatial_output_shape(self.inputShape, self.kernelSize, self.dilation, self.padding, self.stride)
-        print(self.outputHeight, self.outputWidth)
         self.weightTensorDepth = self.inChannels * self.kernelSize[0] * self.kernelSize[1]
         self.spatialBlocksSize = self.outputHeight * self.outputWidth
         # init weight and bias
         self.weights = nn.Parameter(torch.empty((1, self.weightTensorDepth, self.spatialBlocksSize, self.outChannels),requires_grad=True, dtype=torch.float))
-        print("weight",self.weights.shape)
         torch.nn.init.xavier_uniform_(self.weights)
         self.bias = nn.Parameter(torch.empty((1, outChannels, self.outputHeight, self.outputWidth),requires_grad=True, dtype=torch.float))
         torch.nn.init.xavier_uniform_(self.bias)
@@ -43,25 +41,35 @@ class LocallyConnected2D(nn.Module):
     def forward(self, input):
         # Perform Vol2Col/Im2Col operation on the input feature given kernel, stride, padding and dilation size
         inputUnfold = torch.nn.functional.unfold(input, self.kernelSize, dilation=self.dilation, padding=self.padding, stride=self.stride)
-        print(inputUnfold.shape)
         # Apply the weight to the unfolded image
-        print(inputUnfold.view((*inputUnfold.shape, 1)).shape)
         localOpUnfold = (inputUnfold.view((*inputUnfold.shape, 1)) * self.weights)
-        print(localOpUnfold.shape)
         return localOpUnfold.sum(dim=1).transpose(2, 1).reshape((-1, self.outChannels, self.outputHeight, self.outputWidth)) + self.bias
+
+# Transposed locally connected layer
+class TransposedLocallyConnected2D(nn.Module):
+    def calculate_transposed_padding(self, inputShape, outputShape, kernelSize, dilation, stride):
+        return [np.ceil(((outputShape[index]-1)*stride[index]+dilation[index]*(kernelSize[index]-1)-inputShape[index]+1)/2).astype(int) for index in range(len(inputShape))]
+    def __init__(self, inputShape, outputShape, inChannels, outChannels, kernelSize, dilation, stride):
+        super(TransposedLocallyConnected2D, self).__init__()
+        self.inputShape = inputShape
+        self.outputShape = outputShape
+        self.inChannels = inChannels
+        self.outChannels = outChannels
+        self.kernelSize = kernelSize
+        self.dilation = dilation
+        self.stride = stride
+        # compute the padding for the transposed operation
+        self.padding = self.calculate_transposed_padding(self.inputShape, self.outputShape, self.kernelSize, self.dilation, self.stride)
+        # create a locally connected layer with the adapted padding
+        self.transposedLC = LocallyConnected2D(self.inputShape, self.inChannels, self.outChannels, self.kernelSize, self.dilation, self.padding, self.stride)
+
+    def forward(self, input):
+        return self.transposedLC(input)
 
 # Exemple test :
 # distributed locally connected layer where there is no overlaping over the receptive field
-inLayer = LocallyConnected2D(inputShape=[128,128], inChannels=3, outChannels=49, kernelSize=[5,5], dilation=[1,1], padding=[2,2], stride=[2,2])
+inLayer = LocallyConnected2D(inputShape=[128,128], inChannels=3, outChannels=49, kernelSize=[5,5], dilation=[1,1], padding=[0,0], stride=[5,5])
 print(inLayer(torch.randn(1,3,128,128)).shape)
-
-desiredD = 128
-cuStride = 2
-cuDilation = 1
-cuKernel = 5
-cuD = 64
-PaddingSize = int(np.ceil(((desiredD-1)*cuStride+cuDilation*(cuKernel-1)-cuD+1)/2))
-print(PaddingSize)
-
-outLayer = LocallyConnected2D(inputShape=[64,64], inChannels=49, outChannels=3, kernelSize=[5,5], dilation=[1,1], padding=[98,98], stride=[2,2])
-print(outLayer(torch.randn(1,49,64,64)).shape)
+# distributed transpossed locally connected layer where there is no overlaping over the receptive field
+outLayer_ = TransposedLocallyConnected2D(inputShape=[25,25], outputShape=[128,128], inChannels=49, outChannels=3, kernelSize=[5,5], dilation=[1,1], stride=[5,5])
+print(outLayer_(torch.randn(1,49,25,25)).shape)
