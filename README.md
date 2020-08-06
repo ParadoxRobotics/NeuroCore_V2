@@ -5,6 +5,8 @@ Author : Munch Quentin, 2020
 
 Reference :
 
+- Sven Behnke. Hierarchical Neural Networksfor Image Interpretation. 2003, Lecture Notes in Computer Science Volume 2766, Springer.
+
 - David J. Heeger. Theory of cortical function. 21 Feb 2017, PNAS vol.114 N°8 p.1773–1782.
 
 - Alfredo Canziani and Eugenio Culurciello. CortexNet: a Generic Network Family for Robust Visual Temporal Representations. 14 Jun 2017, arXiv:1706.02735.
