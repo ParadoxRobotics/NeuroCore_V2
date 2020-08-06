@@ -1,3 +1,4 @@
+
 #    _   __                      ______
 #   / | / /__  __  ___________  / ____/___  ________
 #  /  |/ / _ \/ / / / ___/ __ \/ /   / __ \/ ___/ _ \
@@ -34,6 +35,7 @@ class LocallyConnected2D(nn.Module):
         self.spatialBlocksSize = self.outputHeight * self.outputWidth
         # init weight and bias
         self.weights = nn.Parameter(torch.empty((1, self.weightTensorDepth, self.spatialBlocksSize, self.outChannels),requires_grad=True, dtype=torch.float))
+        print("weight",self.weights.shape)
         torch.nn.init.xavier_uniform_(self.weights)
         self.bias = nn.Parameter(torch.empty((1, outChannels, self.outputHeight, self.outputWidth),requires_grad=True, dtype=torch.float))
         torch.nn.init.xavier_uniform_(self.bias)
@@ -41,13 +43,25 @@ class LocallyConnected2D(nn.Module):
     def forward(self, input):
         # Perform Vol2Col/Im2Col operation on the input feature given kernel, stride, padding and dilation size
         inputUnfold = torch.nn.functional.unfold(input, self.kernelSize, dilation=self.dilation, padding=self.padding, stride=self.stride)
+        print(inputUnfold.shape)
         # Apply the weight to the unfolded image
+        print(inputUnfold.view((*inputUnfold.shape, 1)).shape)
         localOpUnfold = (inputUnfold.view((*inputUnfold.shape, 1)) * self.weights)
+        print(localOpUnfold.shape)
         return localOpUnfold.sum(dim=1).transpose(2, 1).reshape((-1, self.outChannels, self.outputHeight, self.outputWidth)) + self.bias
 
 # Exemple test :
 # distributed locally connected layer where there is no overlaping over the receptive field
-inLayer = LocallyConnected2D(inputShape=[128,128], inChannels=3, outChannels=49, kernelSize=[5,5], dilation=[1,1], padding=[0,0], stride=[5,5])
-errorLayer = LocallyConnected2D(inputShape=[128,128], inChannels=3, outChannels=49, kernelSize=[5,5], dilation=[1,1], padding=[0,0], stride=[5,5])
-# locally connected lateral/recurrent connection -> each neuron see the prevous state of their neighbor (RF = 5X5)
-latRLayer = LocallyConnected2D(inputShape=[25,25], inChannels=49, outChannels=49, kernelSize=[5,5], dilation=[1,1], padding=[2,2], stride=[1,1])
+inLayer = LocallyConnected2D(inputShape=[128,128], inChannels=3, outChannels=49, kernelSize=[5,5], dilation=[1,1], padding=[2,2], stride=[2,2])
+print(inLayer(torch.randn(1,3,128,128)).shape)
+
+desiredD = 128
+cuStride = 2
+cuDilation = 1
+cuKernel = 5
+cuD = 64
+PaddingSize = int(np.ceil(((desiredD-1)*cuStride+cuDilation*(cuKernel-1)-cuD+1)/2))
+print(PaddingSize)
+
+outLayer = LocallyConnected2D(inputShape=[64,64], inChannels=49, outChannels=3, kernelSize=[5,5], dilation=[1,1], padding=[98,98], stride=[2,2])
+print(outLayer(torch.randn(1,49,64,64)).shape)
