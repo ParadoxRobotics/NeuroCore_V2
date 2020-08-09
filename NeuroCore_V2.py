@@ -20,3 +20,15 @@ import torch.nn as nn
 from torch.nn import init
 # custom layer
 from Locally_Connected_Layer import *
+
+
+# autoencoding layer for hiearchical prediction
+class PredictiveLayer(nn.Module):
+    def __init__(self, inputSize, lateralFbSize, upperFbSize, inChannels, outChannels, kernelSize, Padding, stride):
+        super().__init__()
+        # layer defition
+        self.inputEncoder =
+        self.errorEncoder =
+        self.lateralRecurrentEncoder =
+        self.feedbackEncoder =
+        self.outputDecoder =
