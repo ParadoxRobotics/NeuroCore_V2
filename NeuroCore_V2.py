@@ -24,11 +24,68 @@ from Locally_Connected_Layer import *
 
 # autoencoding layer for hiearchical prediction
 class PredictiveLayer(nn.Module):
-    def __init__(self, inputSize, lateralFbSize, upperFbSize, inChannels, outChannels, kernelSize, Padding, stride):
+    def calculate_padding(self, inputShape, outputShape, kernelSize, dilation, stride):
+        return [np.ceil(((outputShape[index]-1)*stride[index]+dilation[index]*(kernelSize[index]-1)-inputShape[index]+1)/2).astype(int) for index in range(len(inputShape))]
+    def __init__(self, inputSize, hiddenSize, feedBackSize, inChannels, hiddenChannels, feedBackChannels, kernelSize, padding, stride):
         super().__init__()
-        # layer defition
-        self.inputEncoder =
-        self.errorEncoder =
-        self.lateralRecurrentEncoder =
-        self.feedbackEncoder =
-        self.outputDecoder =
+        # layer attributs :
+        # dimensional attributs
+        self.inputSize = inputSize
+        self.inputChannels = inChannels
+        self.hiddenSize = hiddenSize
+        self.hiddenChannels = hiddenChannels
+        self.fbSize = feedBackSize
+        self.fbChannels = feedBackChannels
+        self.outputSize = inputSize
+        self.outputChannels = inChannels
+        # operation attributs
+        self.kernelSize = kernelSize
+        self.padding = padding
+        sel.stride = stride
+        # special operation
+        self.recurrentLateralPadding = calculate_padding(inputShape=self.hiddenSize,
+                                                         outputShape=self.hiddenSize,
+                                                         kernelSize=self.kernelSize,
+                                                         dilation=[1,1],
+                                                         stride=[1,1])
+        # layer defition :
+        # main input encoder
+        self.inputEncoder = LocallyConnected2D(inputShape=self.inputSize,
+                                               inChannels=self.inputChannels,
+                                               outChannels=self.hiddenChannels,
+                                               kernelSize=self.kernelSize,
+                                               dilation=[1,1],
+                                               padding=self.padding,
+                                               stride=self.stride)
+        # prediction error encoder
+        self.errorEncoder = LocallyConnected2D(inputShape=self.inputSize,
+                                               inChannels=self.inputChannels,
+                                               outChannels=self.hiddenChannels,
+                                               kernelSize=self.kernelSize,
+                                               dilation=[1,1],
+                                               padding=self.padding,
+                                               stride=self.stride)
+        # lateral / recurrent encoder
+        self.lateralRecurrentEncoder = LocallyConnected2D(inputShape=self.hiddenSize,
+                                                          inChannels=self.hiddenChannels,
+                                                          outChannels=self.hiddenChannels,
+                                                          kernelSize=self.kernelSize,
+                                                          dilation=[1,1],
+                                                          padding=self.recurrentLateralPadding,
+                                                          stride=[1,1])
+        # upper input feedback encoder
+        self.feedbackEncoder = TransposedLocallyConnected2D(inputShape=self.fbSize,
+                                                            outputShape=self.hiddenSize,
+                                                            inChannels=self.fbChannels,
+                                                            outChannels=self.hiddenChannels,
+                                                            kernelSize=self.kernelSize,
+                                                            dilation=[1,1],
+                                                            stride=self.stride)
+        # prediction decoder
+        self.outputDecoder = TransposedLocallyConnected2D(inputShape=self.hiddenSize,
+                                                          outputShape=self.inputSize,
+                                                          inChannels=self.hiddenChannels,
+                                                          outChannels=self.inputChannels,
+                                                          kernelSize=self.kernelSize,
+                                                          dilation=[1,1],
+                                                          stride=self.stride)
