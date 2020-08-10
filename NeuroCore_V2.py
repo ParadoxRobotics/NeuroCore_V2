@@ -21,13 +21,12 @@ from torch.nn import init
 # custom layer
 from Locally_Connected_Layer import *
 
-
 # autoencoding layer for hiearchical prediction
 class PredictiveLayer(nn.Module):
     def calculate_padding(self, inputShape, outputShape, kernelSize, dilation, stride):
         return [np.ceil(((outputShape[index]-1)*stride[index]+dilation[index]*(kernelSize[index]-1)-inputShape[index]+1)/2).astype(int) for index in range(len(inputShape))]
     def __init__(self, inputSize, hiddenSize, feedBackSize, inChannels, hiddenChannels, feedBackChannels, kernelSize, padding, stride):
-        super().__init__()
+        super(PredictiveLayer, self).__init__()
         # layer attributs :
         # dimensional attributs
         self.inputSize = inputSize
@@ -41,13 +40,13 @@ class PredictiveLayer(nn.Module):
         # operation attributs
         self.kernelSize = kernelSize
         self.padding = padding
-        sel.stride = stride
+        self.stride = stride
         # special operation
-        self.recurrentLateralPadding = calculate_padding(inputShape=self.hiddenSize,
-                                                         outputShape=self.hiddenSize,
-                                                         kernelSize=self.kernelSize,
-                                                         dilation=[1,1],
-                                                         stride=[1,1])
+        self.recurrentLateralPadding = self.calculate_padding(inputShape=self.hiddenSize,
+                                                              outputShape=self.hiddenSize,
+                                                              kernelSize=self.kernelSize,
+                                                              dilation=[1,1],
+                                                              stride=[1,1])
         # layer defition :
         # main input encoder
         self.inputEncoder = LocallyConnected2D(inputShape=self.inputSize,
@@ -89,3 +88,17 @@ class PredictiveLayer(nn.Module):
                                                           kernelSize=self.kernelSize,
                                                           dilation=[1,1],
                                                           stride=self.stride)
+        # activation function
+        self.activation = torch.nn.ReLU6()
+
+    def forward(self, Xt, Et, lastHt, lastFbt):
+        # encoding
+        HXt = self.inputEncoder(Xt)
+        HEt = self.errorEncoder(Et)
+        HLRt = self.lateralRecurrentEncoder(lastHt)
+        HFbt = self.feedbackEncoder(lastFbt)
+        # activation
+        Ht = self.activation(HXt+HEt+HLRt+HFbt)
+        # decoding
+        Yt = self.outputDecoder(Ht)
+        return Yt, Ht
