@@ -20,6 +20,8 @@ from torch.nn import init
 # custom layer
 from Predictive_Layer import *
 
+import time
+
 class NeuroCore_A(nn.Module):
     def __init__(self):
         super(NeuroCore_A, self).__init__()
@@ -59,6 +61,17 @@ class NeuroCore_A(nn.Module):
 
         self.LPU_4 = PredictiveLayer(inputSize=[16,16],
                                      hiddenSize=[8,8],
+                                     feedBackSize=[4,4],
+                                     inChannels=49,
+                                     hiddenChannels=49,
+                                     feedBackChannels=49,
+                                     kernelSize=[5,5],
+                                     lateralKerneSize=[5,5],
+                                     padding=[2,2],
+                                     stride=[2,2])
+
+        self.LPU_5 = PredictiveLayer(inputSize=[8,8],
+                                     hiddenSize=[4,4],
                                      feedBackSize=[1,1],
                                      inChannels=49,
                                      hiddenChannels=49,
@@ -69,12 +82,13 @@ class NeuroCore_A(nn.Module):
                                      stride=[2,2])
 
     # Inference step
-    def forward(self, Xt, Et_1, Et_2, Et_3, Et_4, lastHt_1, lastHt_2, lastHt_3, lastHt_4, upCmd):
+    def forward(self, Xt, Et_1, Et_2, Et_3, Et_4, Et_5, lastHt_1, lastHt_2, lastHt_3, lastHt_4, lastHt_5, upCmd):
         Yt_1, Ht_1 = self.LPU_1(Xt, Et_1, lastHt_1, lastHt_2)
         Yt_2, Ht_2 = self.LPU_2(Ht_1, Et_2, lastHt_2, lastHt_3)
         Yt_3, Ht_3 = self.LPU_3(Ht_2, Et_3, lastHt_3, lastHt_4)
-        Yt_4, Ht_4 = self.LPU_4(Ht_3, Et_4, lastHt_4, upCmd)
-        return Yt_1, Yt_2, Yt_3, Yt_4, Ht_1, Ht_2, Ht_3, Ht_4
+        Yt_4, Ht_4 = self.LPU_4(Ht_3, Et_4, lastHt_4, lastHt_5)
+        Yt_5, Ht_5 = self.LPU_5(Ht_4, Et_5, lastHt_5, upCmd)
+        return Yt_1, Yt_2, Yt_3, Yt_4, Yt_5, Ht_1, Ht_2, Ht_3, Ht_4, Ht_5
 
 
 class NeuroCore_B(nn.Module):
