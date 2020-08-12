@@ -22,7 +22,7 @@ from Locally_Connected_Layer import *
 class PredictiveLayer(nn.Module):
     def calculate_padding(self, inputShape, outputShape, kernelSize, dilation, stride):
         return [np.ceil(((outputShape[index]-1)*stride[index]+dilation[index]*(kernelSize[index]-1)-inputShape[index]+1)/2).astype(int) for index in range(len(inputShape))]
-    def __init__(self, inputSize, hiddenSize, feedBackSize, inChannels, hiddenChannels, feedBackChannels, kernelSize, padding, stride):
+    def __init__(self, inputSize, hiddenSize, feedBackSize, inChannels, hiddenChannels, feedBackChannels, kernelSize, lateralKerneSize, padding, stride):
         super(PredictiveLayer, self).__init__()
         # layer attributs :
         # dimensional attributs
@@ -36,12 +36,13 @@ class PredictiveLayer(nn.Module):
         self.outputChannels = inChannels
         # operation attributs
         self.kernelSize = kernelSize
+        self.lateralKerneSize = lateralKerneSize
         self.padding = padding
         self.stride = stride
         # special operation
         self.recurrentLateralPadding = self.calculate_padding(inputShape=self.hiddenSize,
                                                               outputShape=self.hiddenSize,
-                                                              kernelSize=self.kernelSize,
+                                                              kernelSize=self.lateralKerneSize,
                                                               dilation=[1,1],
                                                               stride=[1,1])
         # layer defition :
