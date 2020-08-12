@@ -33,6 +33,7 @@ from NeuroCore_Model import *
 
 # instanciate NeuroCore model A
 NCNet = NeuroCore_A()
+print(list(NCNet.LPU_1.parameters())[0])
 print("Network loaded and ready")
 
 # Create optimizer
@@ -50,25 +51,25 @@ cost = nn.MSELoss(reduction = 'sum')
 # input
 Xt = Variable(torch.randn(1,3,128,128),requires_grad=True)
 # error of prediction
-Et_1 = Variable(torch.randn(1,3,128,128),requires_grad=True)
-Et_2 = Variable(torch.randn(1,49,64,64),requires_grad=True)
-Et_3 = Variable(torch.randn(1,49,32,32),requires_grad=True)
-Et_4 = Variable(torch.randn(1,49,16,16),requires_grad=True)
-Et_5 = Variable(torch.randn(1,49,8,8),requires_grad=True)
+Et_1 = torch.randn(1,3,128,128,requires_grad=True)
+Et_2 = torch.randn(1,49,64,64,requires_grad=True)
+Et_3 = torch.randn(1,49,32,32,requires_grad=True)
+Et_4 = torch.randn(1,49,16,16,requires_grad=True)
+Et_5 = torch.randn(1,49,8,8,requires_grad=True)
 # last state
-lastHt_1 = Variable(torch.randn(1,49,64,64),requires_grad=True)
-lastHt_2 = Variable(torch.randn(1,49,32,32),requires_grad=True)
-lastHt_3 = Variable(torch.randn(1,49,16,16),requires_grad=True)
-lastHt_4 = Variable(torch.randn(1,49,8,8),requires_grad=True)
-lastHt_5 = Variable(torch.randn(1,49,4,4),requires_grad=True)
+lastHt_1 = torch.randn(1,49,64,64,requires_grad=True)
+lastHt_2 = torch.randn(1,49,32,32,requires_grad=True)
+lastHt_3 = torch.randn(1,49,16,16,requires_grad=True)
+lastHt_4 = torch.randn(1,49,8,8,requires_grad=True)
+lastHt_5 = torch.randn(1,49,4,4,requires_grad=True)
 # upper command fedback
-cmd = Variable(torch.zeros(1,1,1,1),requires_grad=True)
+cmd = torch.zeros(1,1,1,1,requires_grad=True)
 
-lastPred_1 = Variable(torch.randn(1,3,128,128),requires_grad=True)
-lastPred_2 = Variable(torch.randn(1,49,64,64),requires_grad=True)
-lastPred_3 = Variable(torch.randn(1,49,32,32),requires_grad=True)
-lastPred_4 = Variable(torch.randn(1,49,16,16),requires_grad=True)
-lastPred_5 = Variable(torch.randn(1,49,8,8),requires_grad=True)
+lastPred_1 = torch.randn(1,3,128,128,requires_grad=True)
+lastPred_2 = torch.randn(1,49,64,64,requires_grad=True)
+lastPred_3 = torch.randn(1,49,32,32,requires_grad=True)
+lastPred_4 = torch.randn(1,49,16,16,requires_grad=True)
+lastPred_5 = torch.randn(1,49,8,8,requires_grad=True)
 
 # set to training mode (non fixed weight)
 #NCNet.train()
@@ -129,3 +130,4 @@ lastPred_4 = Yt_4
 lastPred_5 = Yt_5
 
 print("test over")
+print(list(NCNet.LPU_1.parameters())[0])
