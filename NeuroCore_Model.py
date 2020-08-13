@@ -9,10 +9,6 @@
 
 # Author : Munch Quentin, 2020
 
-# general library
-import numpy as np
-import cv2
-import matplotlib.pyplot as plt
 # Pytorch library
 import torch
 import torch.nn as nn
@@ -20,7 +16,6 @@ from torch.nn import init
 # custom layer
 from Predictive_Layer import *
 
-import time
 
 class NeuroCore_A(nn.Module):
     def __init__(self):
