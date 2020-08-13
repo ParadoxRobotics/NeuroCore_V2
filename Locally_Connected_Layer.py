@@ -1,11 +1,11 @@
 
-#     _   __                      ______
-#    / | / /__  __  ___________  / ____/___  ________
-#   /  |/ / _ \/ / / / ___/ __ \/ /   / __ \/ ___/ _ \
-#  / /|  /  __/ /_/ / /  / /_/ / /___/ /_/ / /  /  __/
-# /_/ |_/\___/\__,_/_/   \____/\____/\____/_/   \___/
+#    _   __                      ______
+#   / | / /__  __  ___________  / ____/___  ________
+#  /  |/ / _ \/ / / / ___/ __ \/ /   / __ \/ ___/ _ \
+# / /|  /  __/ /_/ / /  / /_/ / /___/ /_/ / /  /  __/
+#/_/ |_/\___/\__,_/_/   \____/\____/\____/_/   \___/
 
-# NeuroCore is an PyTorch implementation of a Predictive Visual Network for robotics
+# NeuroCore is an PyTorch implementation of a Predictive Visual Model for robotics
 # applications (tracking, recognition, manipulation,...)
 
 # Author : Munch Quentin, 2020
@@ -65,11 +65,3 @@ class TransposedLocallyConnected2D(nn.Module):
 
     def forward(self, input):
         return self.transposedLC(input)
-
-# Exemple test :
-# distributed locally connected layer where there is no overlaping over the receptive field
-inLayer = LocallyConnected2D(inputShape=[128,128], inChannels=3, outChannels=49, kernelSize=[5,5], dilation=[1,1], padding=[0,0], stride=[5,5])
-print(inLayer(torch.randn(1,3,128,128)).shape)
-# distributed transpossed locally connected layer where there is no overlaping over the receptive field
-outLayer_ = TransposedLocallyConnected2D(inputShape=[25,25], outputShape=[128,128], inChannels=49, outChannels=3, kernelSize=[5,5], dilation=[1,1], stride=[5,5])
-print(outLayer_(torch.randn(1,49,25,25)).shape)
