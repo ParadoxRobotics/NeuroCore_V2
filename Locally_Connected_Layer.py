@@ -42,7 +42,7 @@ class LocallyConnected2D(nn.Module):
         # Perform Vol2Col/Im2Col operation on the input feature given kernel, stride, padding and dilation size
         inputUnfold = torch.nn.functional.unfold(input, self.kernelSize, dilation=self.dilation, padding=self.padding, stride=self.stride)
         # Apply the weight to the unfolded image
-        localOpUnfold = (inputUnfold.view((*inputUnfold.shape, 1)) * self.weights)
+        localOpUnfold = (inputUnfold.view((*inputUnfold.shape, 1)) * self.weights.clone())
         return localOpUnfold.sum(dim=1).transpose(2, 1).reshape((-1, self.outChannels, self.outputHeight, self.outputWidth)) + self.bias
 
 # Transposed locally connected layer
@@ -77,5 +77,5 @@ class TransposedLocallyConnected2D(nn.Module):
         # Perform Vol2Col/Im2Col operation on the input feature given kernel, stride, padding and dilation size
         inputUnfold = torch.nn.functional.unfold(input, self.kernelSize, dilation=self.dilation, padding=self.padding, stride=self.stride)
         # Apply the weight to the unfolded image
-        localOpUnfold = (inputUnfold.view((*inputUnfold.shape, 1)) * self.weights)
+        localOpUnfold = (inputUnfold.view((*inputUnfold.shape, 1)) * self.weights.clone())
         return localOpUnfold.sum(dim=1).transpose(2, 1).reshape((-1, self.outChannels, self.outputHeight, self.outputWidth)) + self.bias
