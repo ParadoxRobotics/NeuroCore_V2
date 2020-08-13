@@ -9,8 +9,6 @@
 
 # Author : Munch Quentin, 2020
 
-# general library
-import numpy as np
 # Pytorch library
 import torch
 import torch.nn as nn
@@ -66,7 +64,7 @@ class PredictiveLayer(nn.Module):
         self.lateralRecurrentEncoder = LocallyConnected2D(inputShape=self.hiddenSize,
                                                           inChannels=self.hiddenChannels,
                                                           outChannels=self.hiddenChannels,
-                                                          kernelSize=self.kernelSize,
+                                                          kernelSize=self.lateralKerneSize,
                                                           dilation=[1,1],
                                                           padding=self.recurrentLateralPadding,
                                                           stride=[1,1])
