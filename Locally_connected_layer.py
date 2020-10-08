@@ -56,3 +56,8 @@ def kernel_index(inputShape, kernelShape, strideShape, paddingMode, channelIn, c
                     outIdx = np.ravel_multi_index(multi_index=concatIdxs(outputPosition, fanOut), dims=concatIdxs(outputShape, channelOut))
                     inIdx = np.ravel_multi_index(multi_index=concatIdxs(inputPosition, fanIn), dims=concatIdxs(inputShape, channelIn))
                     yield (outIdx, inIdx)
+
+outputShape = compute_output_shape(inputShape=(96,96), kernelShape=(6,6), strideShape=(6,6), paddingMode=False)
+iIdx = sorted(kernel_index(inputShape=(96,96), kernelShape=(6,6), strideShape=(6,6), paddingMode=False, channelIn=3, channelOut=49))
+weightkernel = np.random.randn(len(iIdx),)
+bias = np.random.randn(outputShape[0], outputShape[1], 49)
