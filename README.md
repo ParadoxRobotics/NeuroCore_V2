@@ -7,6 +7,8 @@ Author : Munch Quentin, 2020
 
 Reference :
 
+- Fabio Anselmi, Joel Z. Leibo, Lorenzo Rosasco, Jim Mutch, Andrea Tacchetti and Tomaso Poggio. Unsupervised learning of invariant representations with low sample complexity: the magic of sensory cortex or a new framework for machine learning ?. 12 Mar 2014, CBMM Memo No. 001.
+
 - Sven Behnke. Hierarchical Neural Networksfor Image Interpretation. 2003, Lecture Notes in Computer Science Volume 2766, Springer.
 
 - David J. Heeger. Theory of cortical function. 21 Feb 2017, PNAS vol.114 N°8 p.1773–1782.
