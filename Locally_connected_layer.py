@@ -84,4 +84,13 @@ print(kernelShape)
 print(kernelWeight.shape)
 print(bias.shape)
 
-print(KernelIdx)
+inputFlat = np.random.randn(1,96*96*3)
+sparseMat = np.zeros(kernelShape)
+
+for w in range(0,len(KernelIdx)):
+    value = kernelWeight[w,]
+    idx = KernelIdx[w]
+    sparseMat[idx[0], idx[1]] = value
+
+outputFlat = np.dot(inputFlat, sparseMat.T)
+print(outputFlat.shape)
