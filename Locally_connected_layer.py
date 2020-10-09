@@ -57,7 +57,31 @@ def kernel_index(inputShape, kernelShape, strideShape, paddingMode, channelIn, c
                     inIdx = np.ravel_multi_index(multi_index=concatIdxs(inputPosition, fanIn), dims=concatIdxs(inputShape, channelIn))
                     yield (outIdx, inIdx)
 
-outputShape = compute_output_shape(inputShape=(96,96), kernelShape=(6,6), strideShape=(6,6), paddingMode=False)
-iIdx = sorted(kernel_index(inputShape=(96,96), kernelShape=(6,6), strideShape=(6,6), paddingMode=False, channelIn=3, channelOut=49))
-weightkernel = np.random.randn(len(iIdx),)
-bias = np.random.randn(outputShape[0], outputShape[1], 49)
+
+# perform local computation with input shape = [1, H, W, C]
+def compute_LC(input, kernelWeight, kernelIdx, KernelShape, outputShape):
+    inputFlat = np.reshape(input, (input.shape[0], -1))
+    return None
+
+
+
+inputSize = (96,96)
+kernelSize = (6,6)
+strideSize = (6,6)
+filterIn = 3
+filterOut = 49
+padding = False
+
+outputShape = compute_output_shape(inputShape=inputSize, kernelShape=kernelSize, strideShape=strideSize, paddingMode=padding)
+kernelShape = (outputShape[0] * outputShape[1] * filterOut, inputSize[0] * inputSize[1] * filterIn)
+KernelIdx = sorted(kernel_index(inputShape=inputSize, kernelShape=kernelSize, strideShape=strideSize, paddingMode=padding, channelIn=filterIn, channelOut=filterOut))
+kernelWeight = np.random.randn(len(KernelIdx),)
+bias = np.random.randn(outputShape[0], outputShape[1], filterOut)
+
+print(inputSize, kernelSize, strideSize, filterIn, filterOut, padding)
+print(outputShape)
+print(kernelShape)
+print(kernelWeight.shape)
+print(bias.shape)
+
+print(KernelIdx)
