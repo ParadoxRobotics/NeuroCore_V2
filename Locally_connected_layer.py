@@ -1,6 +1,10 @@
 import numpy as np
 import math
 import itertools
+from matplotlib import pyplot as plt
+
+# the current implementation need to be rethink using CSR format representation
+# CSR -> Row = [], Column = [] and value = [] (save memory and operation)
 
 def compute_output_shape(inputShape, kernelShape, strideShape, paddingMode):
     if paddingMode == True:
@@ -55,15 +59,28 @@ def kernel_index(inputShape, kernelShape, strideShape, paddingMode, channelIn, c
                 for fanOut in range(channelOut):
                     outIdx = np.ravel_multi_index(multi_index=concatIdxs(outputPosition, fanOut), dims=concatIdxs(outputShape, channelOut))
                     inIdx = np.ravel_multi_index(multi_index=concatIdxs(inputPosition, fanIn), dims=concatIdxs(inputShape, channelIn))
+                    # generator containing all output-input index for a sparse matrix
                     yield (outIdx, inIdx)
 
 
-# perform local computation with input shape = [1, H, W, C]
-def compute_LC(input, kernelWeight, kernelIdx, KernelShape, outputShape):
+# perform local unshared computation with input shape = [1, H, W, C]
+def compute_LC(input, kernelWeight, kernelIdx, KernelShape, bias, outputShape, channelOut):
+    # init sparse matrix
+    sparseMat = np.zeros(kernelShape)
+    # flat the input
     inputFlat = np.reshape(input, (input.shape[0], -1))
-    return None
-
-
+    # load weight into the sparse matrix
+    for w in range(0, len(kernelIdx)):
+        # get weight and location
+        weight = kernelWeight[w,]
+        weightIdx = kernelIdx[w]
+        # load
+        sparseMat[weightIdx[0], weightIdx[1]] = weight
+    # perform matrix multiplication
+    outputFlat = np.dot(inputFlat, sparseMat.T)
+    # reshape the output according to the input
+    output = np.reshape(outputFlat, (input.shape[0], outputShape[0], outputShape[1], channelOut))
+    return output
 
 inputSize = (96,96)
 kernelSize = (6,6)
@@ -84,13 +101,7 @@ print(kernelShape)
 print(kernelWeight.shape)
 print(bias.shape)
 
-inputFlat = np.random.randn(1,96*96*3)
-sparseMat = np.zeros(kernelShape)
-
-for w in range(0,len(KernelIdx)):
-    value = kernelWeight[w,]
-    idx = KernelIdx[w]
-    sparseMat[idx[0], idx[1]] = value
-
-outputFlat = np.dot(inputFlat, sparseMat.T)
-print(outputFlat.shape)
+# test input
+input = np.random.randn(1,96,96,3)
+output = compute_LC(input=input, kernelWeight=kernelWeight, kernelIdx=KernelIdx, KernelShape=kernelShape, bias=bias, outputShape=outputShape, channelOut=filterOut)
+print(output.shape)
