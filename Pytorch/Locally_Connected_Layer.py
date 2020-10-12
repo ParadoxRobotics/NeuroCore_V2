@@ -84,7 +84,8 @@ class PredictiveLayer():
         self.recurrentKernelSize = recurrentKernelSize # [H, W]
         self.inputChannels = inputChannels # int
         self.outputChannels = outputChannels # int
-
+    
+        # check if feedback parameters size are equal
         if len(upperHiddenSize) == len(upperHiddenSize) == len(upperHiddenChannels):
             # generate n feedback connection
             self.upperHiddenSize = upperHiddenSize # [H, W]
