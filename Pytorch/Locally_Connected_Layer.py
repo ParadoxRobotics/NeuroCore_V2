@@ -83,7 +83,7 @@ class PredictiveLayer():
     def weight_init(self, weightSize, weightIndexSize):
         # mearn = 0 and stddev = sqrt(1/inputSize)
         np.random.seed(42)
-        return np.random.randn(weightIndexSize)*np.sqrt(1/weightSize)
+        return np.random.randn(weightIndexSize,)*np.sqrt(1/weightSize)
 
 
 
@@ -146,13 +146,16 @@ class PredictiveLayer():
                 for i in range(self.numberFeedback):
                     self.WFeedback.append(self.weight_init(weightSize=self.WFeedbackSize[i][0], weightIndexSize=len(self.WFeedbackIdx[i])))
 
-
-
-
         else:
             raise Exception('not same feedback parameters size')
 
 
 # test
-#Layer_1 = PredictiveLayer(inputSize=(96,96), inputKernelSize=(6,6), recurrentKernelSize=(4,4), inputChannels=3, outputChannels=49, upperHiddenSize=[(8,8)], upperKernelSize=[(2,2)],  upperHiddenChannels=[49], biasMode=False)
-Layer_1 = PredictiveLayer(inputSize=(96,96), inputKernelSize=(6,6), recurrentKernelSize=(4,4), inputChannels=3, outputChannels=49, upperHiddenSize=[], upperKernelSize=[],  upperHiddenChannels=[], biasMode=False)
+Layer_1 = PredictiveLayer(inputSize=(96,96),
+                          inputKernelSize=(6,6),
+                          recurrentKernelSize=(4,4),
+                          inputChannels=3, outputChannels=49,
+                          upperHiddenSize=[(8,8), (4,4), (2,2)],
+                          upperKernelSize=[(2,2), (2,2), (2,2)],
+                          upperHiddenChannels=[49, 49, 49],
+                          biasMode=False)
