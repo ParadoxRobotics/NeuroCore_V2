@@ -81,10 +81,30 @@ class PredictiveLayer():
             raise Exception('kernel dimension or stride dimension must agree with input dimension')
 
     def weight_init(self, weightSize, weightIndexSize):
-        # mearn = 0 and stddev = sqrt(1/inputSize)
+        # mean = 0 and stddev = sqrt(1/inputSize)
         np.random.seed(42)
         return np.random.randn(weightIndexSize,)*np.sqrt(1/weightSize)
 
+    def bias_init(self, outputSize, outputChannels):
+        # mean = 0 and stddev = = sqrt(1/inputSize)
+        np.random.seed(42)
+        return np.random.randn(outputSize[0], outputSize[1], outputChannels)*np.sqrt(1/outputSize[0]*outputSize[1]*outputChannels)
+
+    def SELU(self, input):
+        alphaValue = 1.6733
+        lambdaValue = 1.0507
+        if input <= 0.0:
+            return lambdaValue*(alphaValue*np.exp(input)-alphaValue)
+        else:
+            return lambdaValue*input
+
+    def dt_SELU(self, input):
+        alphaValue = 1.6733
+        lambdaValue = 1.0507
+        if input <= 0.0:
+            return lambdaValue*alphaValue*np.exp(input)
+        else:
+            return lambdaValue
 
 
     def __init__(self, inputSize, inputKernelSize, recurrentKernelSize, inputChannels, outputChannels, upperHiddenSize, upperKernelSize, upperHiddenChannels, biasMode):
@@ -145,6 +165,11 @@ class PredictiveLayer():
                 self.WFeedback = []
                 for i in range(self.numberFeedback):
                     self.WFeedback.append(self.weight_init(weightSize=self.WFeedbackSize[i][0], weightIndexSize=len(self.WFeedbackIdx[i])))
+
+            # create bias for the hidden layer
+            if self.biasMode == True:
+                self.bias = self.bias_init(outputSize, self.outputChannels)
+
 
         else:
             raise Exception('not same feedback parameters size')
