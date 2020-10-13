@@ -24,12 +24,12 @@ class PredictiveLayer():
             outputSize = [((inputSize[idx]+strideSize[idx]-1)//strideSize[idx]) for idx in range(len(inputSize))]
             outputSize = tuple([0 if inputSize[idx] == 0 else outputSize[idx] for idx in range(len(inputSize))])
         else:
-            outputSize = [((inputSize[idx]-inputKernelSize[idx]+1+strideSize[idx]-1)//strideSize[idx]) for idx in range(len(inputSize))]
+            outputSize = [(((inputSize[idx]-inputKernelSize[idx]+1)+strideSize[idx]-1)//strideSize[idx]) for idx in range(len(inputSize))]
             outputSize = tuple([0 if inputSize[idx] == 0 else outputSize[idx] for idx in range(len(inputSize))])
         return outputSize
 
     # internal class function for extracting the locations of the input connected to a a given output position
-    def location_output_input(inputSize, inputKernelSize, strideSize, outputPosition, paddingMode):
+    def location_output_input(self, inputSize, inputKernelSize, strideSize, outputPosition, paddingMode):
         # init location
         location = []
         # input dimension
@@ -58,24 +58,36 @@ class PredictiveLayer():
         # kernel and stride dimension
         kernelDim = len(inputKernelSize)
         strideDim = len(strideSize)
-        # compute output shape
-        outputSize = self.compute_output_shape(inputSize, inputKernelSize, strideSize, paddingMode)
-        # compute axes ticks
-        outputAxesTicks = [range(d) for d in outputSize]
-        # for an input shape [H, W, C] with channel in last -> concat index (lambda generator)
-        concatIdxs = lambda spatial_idx, filter_idx: spatial_idx + (filter_idx,)
 
-        for outputPosition in itertools.product(*outputAxesTicks):
-            inputAxesTicks = self.location_output_input(inputSize, inputKernelSize, strideSize, outputPosition, paddingMode)
-            for inputPosition in itertools.product(*inputAxesTicks):
-                for fanIn in range(inputChannels):
-                    for fanOut in range(outputChannels):
-                        outIdx = np.ravel_multi_index(multi_index=concatIdxs(outputPosition, fanOut), dims=concatIdxs(outputSize, outputChannels))
-                        inIdx = np.ravel_multi_index(multi_index=concatIdxs(inputPosition, fanIn), dims=concatIdxs(inputSize, inputChannels))
-                        # generator containing all output-input index for a sparse matrix
-                        yield (outIdx, inIdx)
+        # check size input
+        if kernelDim == inDim and strideDim == inDim:
+            # compute output shape
+            outputSize = self.compute_output_size(inputSize, inputKernelSize, strideSize, paddingMode)
+            # compute axes ticks
+            outputAxesTicks = [range(d) for d in outputSize]
+            # for an input shape [H, W, C] with channel in last -> concat index (lambda generator)
+            concatIdxs = lambda spatial_idx, filter_idx: spatial_idx + (filter_idx,)
 
-    def __init__(self, inputSize, inputKernelSize, recurrentKernelSize, inputChannels, outputChannels, upperHiddenSize, upperKernelSize, upperHiddenChannels):
+            for outputPosition in itertools.product(*outputAxesTicks):
+                inputAxesTicks = self.location_output_input(inputSize, inputKernelSize, strideSize, outputPosition, paddingMode)
+                for inputPosition in itertools.product(*inputAxesTicks):
+                    for fanIn in range(inputChannels):
+                        for fanOut in range(outputChannels):
+                            outIdx = np.ravel_multi_index(multi_index=concatIdxs(outputPosition, fanOut), dims=concatIdxs(outputSize, outputChannels))
+                            inIdx = np.ravel_multi_index(multi_index=concatIdxs(inputPosition, fanIn), dims=concatIdxs(inputSize, inputChannels))
+                            # generator containing all output-input index for a sparse matrix
+                            yield (outIdx, inIdx)
+        else:
+            raise Exception('kernel dimension or stride dimension must agree with input dimension')
+
+    def weight_init(self, weightSize, weightIndexSize):
+        # mearn = 0 and stddev = sqrt(1/inputSize)
+        np.random.seed(42)
+        return np.random.randn(weightIndexSize,)*np.sqrt(1/weightSize)
+
+
+
+    def __init__(self, inputSize, inputKernelSize, recurrentKernelSize, inputChannels, outputChannels, upperHiddenSize, upperKernelSize, upperHiddenChannels, biasMode):
         super(PredictiveLayer, self).__init__()
 
         # create attribut from the user :
@@ -84,14 +96,15 @@ class PredictiveLayer():
         self.recurrentKernelSize = recurrentKernelSize # [H, W]
         self.inputChannels = inputChannels # int
         self.outputChannels = outputChannels # int
+        self.biasMode = biasMode
 
+        # check if feedback parameters size are equal and non-empty
         if len(upperHiddenSize) == len(upperHiddenSize) == len(upperHiddenChannels):
-            # generate n feedback connection
+            # get feedback parameters
             self.upperHiddenSize = upperHiddenSize # [H, W]
             self.upperKernelSize = upperKernelSize # [H, W]
             self.upperHiddenChannels = upperHiddenChannels # int
-
-            self.numberFeedback = len(upperHiddenSize)
+            self.numberFeedback = len(upperHiddenSize) # int
 
             # compute and create internal attribut for the layer :
             # calculate output size (output = [H, w]) corresponding to the hidden representation of the layer
@@ -121,11 +134,28 @@ class PredictiveLayer():
                 for i in range(self.numberFeedback):
                     self.WFeedbackIdx.append(sorted(self.kernel_index(self.outputSize, self.upperKernelSize[i], self.upperKernelSize[i], False, self.inputChannels, self.upperHiddenChannels[i])))
 
-            print(self.WFeedbackIdx)
+            # Create weight vector for the sparse weight matrix
+            # encoder / recurrence / decoder
+            self.WInput = self.weight_init(weightSize=self.WInputSize[1], weightIndexSize=len(self.WInputIdx))
+            self.WError = self.weight_init(weightSize=self.WErrorSize[1], weightIndexSize=len(self.WErrorIdx))
+            self.WRecurrent = self.weight_init(weightSize=self.WRecurrentSize[1], weightIndexSize=len(self.WRecurrentIdx))
+            self.WDecoder = self.weight_init(weightSize=self.WDecoderSize[0], weightIndexSize=len(self.WDecoderIdx))
+            # feedback
+            if self.numberFeedback != 0:
+                self.WFeedback = []
+                for i in range(self.numberFeedback):
+                    self.WFeedback.append(self.weight_init(weightSize=self.WFeedbackSize[i][0], weightIndexSize=len(self.WFeedbackIdx[i])))
 
         else:
             raise Exception('not same feedback parameters size')
 
 
 # test
-Layer_1 = PredictiveLayer(inputSize=(96,96), inputKernelSize=(6,6), recurrentKernelSize=(4,4), inputChannels=3, outputChannels=49, upperHiddenSize=[(8,8)], upperKernelSize=[(2,2)],  upperHiddenChannels=[49])
+Layer_1 = PredictiveLayer(inputSize=(96,96),
+                          inputKernelSize=(6,6),
+                          recurrentKernelSize=(4,4),
+                          inputChannels=3, outputChannels=49,
+                          upperHiddenSize=[(8,8), (4,4), (2,2)],
+                          upperKernelSize=[(2,2), (2,2), (2,2)],
+                          upperHiddenChannels=[49, 49, 49],
+                          biasMode=False)
