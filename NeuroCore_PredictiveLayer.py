@@ -80,15 +80,15 @@ class PredictiveLayer():
         else:
             raise Exception('kernel dimension or stride dimension must agree with input dimension')
 
+    # weight initilization with lecun_normal init
     def weight_init(self, weightSize, weightIndexSize):
         # mean = 0 and stddev = sqrt(1/inputSize)
         np.random.seed(42)
         return np.random.randn(weightIndexSize,)*np.sqrt(1/weightSize)
 
+    # bias initialization at 1
     def bias_init(self, outputSize, outputChannels):
-        # mean = 0 and stddev = = sqrt(1/inputSize)
-        np.random.seed(42)
-        return np.random.randn(outputSize[0], outputSize[1], outputChannels)*np.sqrt(1/outputSize[0]*outputSize[1]*outputChannels)
+        return np.ones((outputSize[0], outputSize[1], outputChannels))
 
     def SELU(self, input):
         alphaValue = 1.6733
@@ -154,12 +154,25 @@ class PredictiveLayer():
                 for i in range(self.numberFeedback):
                     self.WFeedbackIdx.append(sorted(self.kernel_index(self.outputSize, self.upperKernelSize[i], self.upperKernelSize[i], False, self.inputChannels, self.upperHiddenChannels[i])))
 
+            # get idx size
+            # encoder / recurrence / decoder
+            self.WInputIdxSize = len(self.WInputIdx)
+            self.WErrorIdxSize = len(self.WErrorIdx)
+            self.WRecurrentIdxSize = len(self.WRecurrentIdx)
+            self.WDecoderIdxSize = len(self.WDecoderIdx)
+            # feedback
+            if self.numberFeedback != 0:
+                self.WFeedbackIdxSize = []
+                for i in range(self.numberFeedback):
+                    self.WFeedbackIdxSize.append(len(self.WFeedbackIdx[i]))
+            print(self.WFeedbackIdxSize)
+
             # Create weight vector for the sparse weight matrix
             # encoder / recurrence / decoder
-            self.WInput = self.weight_init(weightSize=self.WInputSize[1], weightIndexSize=len(self.WInputIdx))
-            self.WError = self.weight_init(weightSize=self.WErrorSize[1], weightIndexSize=len(self.WErrorIdx))
-            self.WRecurrent = self.weight_init(weightSize=self.WRecurrentSize[1], weightIndexSize=len(self.WRecurrentIdx))
-            self.WDecoder = self.weight_init(weightSize=self.WDecoderSize[0], weightIndexSize=len(self.WDecoderIdx))
+            self.WInput = self.weight_init(weightSize=self.WInputSize[1], weightIndexSize=self.WInputIdxSize)
+            self.WError = self.weight_init(weightSize=self.WErrorSize[1], weightIndexSize=self.WErrorIdxSize)
+            self.WRecurrent = self.weight_init(weightSize=self.WRecurrentSize[1], weightIndexSize=self.WRecurrentIdxSize)
+            self.WDecoder = self.weight_init(weightSize=self.WDecoderSize[0], weightIndexSize=self.WDecoderIdxSize)
             # feedback
             if self.numberFeedback != 0:
                 self.WFeedback = []
@@ -170,6 +183,15 @@ class PredictiveLayer():
             if self.biasMode == True:
                 self.bias = self.bias_init(self.outputSize, self.outputChannels)
 
+            # create sparse matrix
+            self.SM_WInput = np.zeros(self.WInputSize)
+            self.SM_WError = np.zeros(self.WErrorSize)
+            self.SM_WRecurrent = np.zeros(self.WRecurrentSize)
+            self.SM_WDecoder = np.zeros(self.WDecoderSize)
+            if self.numberFeedback != 0:
+                self.SM_WFeedback = []
+                for i in range(0, self.numberFeedback):
+                    self.SM_WFeedback.append(np.zeros(self.WFeedbackSize[i]))
 
         else:
             raise Exception('not same feedback parameters size')
@@ -183,4 +205,4 @@ Layer_1 = PredictiveLayer(inputSize=(96,96),
                           upperHiddenSize=[(8,8), (4,4), (2,2)],
                           upperKernelSize=[(2,2), (2,2), (2,2)],
                           upperHiddenChannels=[49, 49, 49],
-                          biasMode=False)
+                          biasMode=True)
