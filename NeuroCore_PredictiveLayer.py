@@ -168,7 +168,7 @@ class PredictiveLayer():
 
             # create bias for the hidden layer
             if self.biasMode == True:
-                self.bias = self.bias_init(outputSize, self.outputChannels)
+                self.bias = self.bias_init(self.outputSize, self.outputChannels)
 
 
         else:
