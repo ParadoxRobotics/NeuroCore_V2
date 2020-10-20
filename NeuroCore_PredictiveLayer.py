@@ -139,7 +139,7 @@ class PredictiveLayer():
             # compute and create internal attribut for the layer :
             # calculate output size (output = [H, w]) corresponding to the hidden representation of the layer
             self.outputSize = self.compute_output_size(self.inputSize, self.inputKernelSize, self.inputKernelSize, paddingMode=False)
-
+            print(self.outputSize)
             # calculate weight shape for every I/O of the layer
             # encoder / recurrence / decoder
             self.WInputSize = (self.outputSize[0]*self.outputSize[1]*self.outputChannels, self.inputSize[0]*self.inputSize[1]*self.inputChannels)
@@ -221,7 +221,7 @@ Layer_4 = PredictiveLayer(inputSize=(4,4),
                           biasMode=True)
 
 Layer_5 = PredictiveLayer(inputSize=(2,2),
-                          inputKernelSize=(1,1),
+                          inputKernelSize=(2,2),
                           recurrentKernelSize=(1,1),
                           inputChannels=49, outputChannels=49,
                           upperHiddenSize=[],
