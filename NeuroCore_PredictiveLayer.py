@@ -188,7 +188,43 @@ Layer_1 = PredictiveLayer(inputSize=(96,96),
                           inputKernelSize=(6,6),
                           recurrentKernelSize=(4,4),
                           inputChannels=3, outputChannels=49,
-                          upperHiddenSize=[(8,8), (4,4), (2,2)],
-                          upperKernelSize=[(2,2), (2,2), (2,2)],
+                          upperHiddenSize=[(8,8), (4,4), (2,2), (1,1)],
+                          upperKernelSize=[(2,2), (2,2), (2,2), (1,1)],
+                          upperHiddenChannels=[49, 49, 49, 49],
+                          biasMode=True)
+
+Layer_2 = PredictiveLayer(inputSize=(16,16),
+                          inputKernelSize=(2,2),
+                          recurrentKernelSize=(4,4),
+                          inputChannels=49, outputChannels=49,
+                          upperHiddenSize=[(4,4), (2,2), (1,1)],
+                          upperKernelSize=[(2,2), (2,2), (1,1)],
                           upperHiddenChannels=[49, 49, 49],
+                          biasMode=True)
+
+Layer_3 = PredictiveLayer(inputSize=(8,8),
+                          inputKernelSize=(2,2),
+                          recurrentKernelSize=(4,4),
+                          inputChannels=49, outputChannels=49,
+                          upperHiddenSize=[(2,2), (1,1)],
+                          upperKernelSize=[(2,2), (1,1)],
+                          upperHiddenChannels=[49, 49],
+                          biasMode=True)
+
+Layer_4 = PredictiveLayer(inputSize=(4,4),
+                          inputKernelSize=(2,2),
+                          recurrentKernelSize=(2,2),
+                          inputChannels=49, outputChannels=49,
+                          upperHiddenSize=[(1,1)],
+                          upperKernelSize=[(1,1)],
+                          upperHiddenChannels=[49],
+                          biasMode=True)
+
+Layer_5 = PredictiveLayer(inputSize=(2,2),
+                          inputKernelSize=(1,1),
+                          recurrentKernelSize=(1,1),
+                          inputChannels=49, outputChannels=49,
+                          upperHiddenSize=[],
+                          upperKernelSize=[],
+                          upperHiddenChannels=[],
                           biasMode=True)
