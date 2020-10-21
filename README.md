@@ -1,7 +1,7 @@
 # NeuroCore_V2
 NeuroCore is an PyTorch implementation of a Predictive Visual Model for robotics applications (tracking, recognition, manipulation,...)
 
-# WORK IN PROGRESS NON-FUNCTIONAL OR OPTIMAL
+# WORK IN PROGRESS...
 
 Author : Munch Quentin, 2020
 
