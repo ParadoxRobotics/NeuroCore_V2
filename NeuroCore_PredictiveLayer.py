@@ -116,6 +116,27 @@ class PredictiveLayer():
         else:
             return lambdaValue
 
+    # Leaky integrator neuron
+    def LIR(self, input, prevAct, tau):
+        return max(0, tau*input+(1-tau)*prevAct)
+
+    # Leaky integrator neuron derivative
+    def dt_LIR(self, input):
+        return (input>0)*1
+
+    # leaky integrator neuron with global K% winner-take-all
+    def LIR_WTA(self, input, prevAct, tau, sparsity):
+        # Leaky integrator neuron
+        act = tau*input+(1-tau)*prevAct
+        # compute full WTA activation
+        kp = int(len(act)*sparsity)
+        threshold = sorted(act)[kp]
+        actSparse = np.array([float(x>=threshold) for x in act])
+        actSparse = np.reshape(actSparse, (len(actSparse),1))
+        # return ratio active/inactive and response
+        return act*actSparse
+
+
 
     def __init__(self, inputSize, inputKernelSize, recurrentKernelSize, inputChannels, outputChannels, upperHiddenSize, upperKernelSize, upperHiddenChannels, biasMode):
         super(PredictiveLayer, self).__init__()
