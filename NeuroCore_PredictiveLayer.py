@@ -116,7 +116,7 @@ class PredictiveLayer():
         else:
             return lambdaValue
 
-    # Leaky integrator neuron with ReLU activation 
+    # Leaky integrator neuron with ReLU activation
     def LIR(self, input, prevAct, tau):
         return max(0, tau*input+(1-tau)*prevAct)
 
@@ -133,8 +133,10 @@ class PredictiveLayer():
         threshold = sorted(act)[kp]
         actSparse = np.array([float(x>=threshold) for x in act])
         actSparse = np.reshape(actSparse, (len(actSparse),1))
-        # return ratio active/inactive and response
-        return act*actSparse
+        for i in range(0, act.shape[0]):
+            if actSparse[i,0] == 0:
+                act[i,0] = 0
+        return act
 
 
     def __init__(self, inputSize, inputKernelSize, recurrentKernelSize, inputChannels, outputChannels, upperHiddenSize, upperKernelSize, upperHiddenChannels, biasMode):
