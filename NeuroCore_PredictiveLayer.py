@@ -133,10 +133,7 @@ class PredictiveLayer():
         threshold = sorted(act)[kp]
         actSparse = np.array([float(x>=threshold) for x in act])
         actSparse = np.reshape(actSparse, (len(actSparse),1))
-        for i in range(0, act.shape[0]):
-            if actSparse[i,0] == 0:
-                act[i,0] = 0
-        return act
+        return np.where(actSparse == 1, act, 0)
 
 
     def __init__(self, inputSize, inputKernelSize, recurrentKernelSize, inputChannels, outputChannels, upperHiddenSize, upperKernelSize, upperHiddenChannels, biasMode):
