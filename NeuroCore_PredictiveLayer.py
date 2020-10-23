@@ -136,7 +136,7 @@ class PredictiveLayer():
         return np.where(actSparse == 1, act, 0)
 
 
-    def __init__(self, inputSize, inputKernelSize, recurrentKernelSize, inputChannels, outputChannels, upperHiddenSize, upperKernelSize, upperHiddenChannels, biasMode):
+    def __init__(self, inputSize, inputKernelSize, recurrentKernelSize, inputChannels, outputChannels, upperHiddenSize, upperKernelSize, upperHiddenChannels, biasMode, neuronType, sparsity, tau):
         super(PredictiveLayer, self).__init__()
 
         # create attribut from the user :
@@ -146,6 +146,9 @@ class PredictiveLayer():
         self.inputChannels = inputChannels # int
         self.outputChannels = outputChannels # int
         self.biasMode = biasMode
+        self.neuronType = neuronType
+        self.sparsity = sparsity
+        self.tau = tau
 
         # check if feedback parameters size are equal and non-empty
         if len(upperHiddenSize) == len(upperHiddenSize) == len(upperHiddenChannels):
@@ -163,7 +166,9 @@ class PredictiveLayer():
             # encoder / recurrence / decoder
             self.WInputSize = (self.outputSize[0]*self.outputSize[1]*self.outputChannels, self.inputSize[0]*self.inputSize[1]*self.inputChannels)
             self.WErrorSize = (self.outputSize[0]*self.outputSize[1]*self.outputChannels, self.inputSize[0]*self.inputSize[1]*self.inputChannels)
-            self.WRecurrentSize = (self.outputSize[0]*self.outputSize[1]*self.outputChannels, self.outputSize[0]*self.outputSize[1]*self.outputChannels)
+            # replace the recurrent lateral layer by a winner-take-all Leaky integrator neuron
+            if neuronType != 'LIR_WTA' and sparsity == None:
+                self.WRecurrentSize = (self.outputSize[0]*self.outputSize[1]*self.outputChannels, self.outputSize[0]*self.outputSize[1]*self.outputChannels)
             self.WDecoderSize = (self.outputSize[0]*self.outputSize[1]*self.outputChannels, self.inputSize[0]*self.inputSize[1]*self.inputChannels)
             # feedback
             if self.numberFeedback != 0:
@@ -175,7 +180,8 @@ class PredictiveLayer():
             # encoder / recurrence / decoder
             self.WInputIdx = sorted(self.kernel_index(self.inputSize, self.inputKernelSize, self.inputKernelSize, False, self.inputChannels, self.outputChannels))
             self.WErrorIdx = sorted(self.kernel_index(self.inputSize, self.inputKernelSize, self.inputKernelSize, False, self.inputChannels, self.outputChannels))
-            self.WRecurrentIdx = sorted(self.kernel_index(self.outputSize, self.recurrentKernelSize, (1,1), True, self.outputChannels, self.outputChannels))
+            if neuronType != 'LIR_WTA' and sparsity == None:
+                self.WRecurrentIdx = sorted(self.kernel_index(self.outputSize, self.recurrentKernelSize, (1,1), True, self.outputChannels, self.outputChannels))
             self.WDecoderIdx = sorted(self.kernel_index(self.inputSize, self.inputKernelSize, self.inputKernelSize, False, self.inputChannels, self.outputChannels))
             # feedback
             if self.numberFeedback != 0:
@@ -187,7 +193,8 @@ class PredictiveLayer():
             # encoder / recurrence / decoder
             self.WInput = self.weight_init_normal(weightSize=self.WInputSize[1], weightIndexSize=len(self.WInputIdx))
             self.WError = self.weight_init_normal(weightSize=self.WErrorSize[1], weightIndexSize=len(self.WErrorIdx))
-            self.WRecurrent = self.weight_init_normal(weightSize=self.WRecurrentSize[1], weightIndexSize=len(self.WRecurrentIdx))
+            if neuronType != 'LIR_WTA' and sparsity == None:
+                self.WRecurrent = self.weight_init_normal(weightSize=self.WRecurrentSize[1], weightIndexSize=len(self.WRecurrentIdx))
             self.WDecoder = self.weight_init_normal(weightSize=self.WDecoderSize[0], weightIndexSize=len(self.WDecoderIdx))
             # feedback
             if self.numberFeedback != 0:
@@ -210,7 +217,10 @@ Layer_1 = PredictiveLayer(inputSize=(96,96),
                           upperHiddenSize=[(8,8), (4,4), (2,2), (1,1)],
                           upperKernelSize=[(2,2), (2,2), (2,2), (1,1)],
                           upperHiddenChannels=[49, 49, 49, 49],
-                          biasMode=True)
+                          biasMode=True,
+                          neuronType=None,
+                          sparsity=None,
+                          tau=None)
 
 Layer_2 = PredictiveLayer(inputSize=(16,16),
                           inputKernelSize=(2,2),
@@ -219,7 +229,10 @@ Layer_2 = PredictiveLayer(inputSize=(16,16),
                           upperHiddenSize=[(4,4), (2,2), (1,1)],
                           upperKernelSize=[(2,2), (2,2), (1,1)],
                           upperHiddenChannels=[49, 49, 49],
-                          biasMode=True)
+                          biasMode=True,
+                          neuronType=None,
+                          sparsity=None,
+                          tau=None)
 
 Layer_3 = PredictiveLayer(inputSize=(8,8),
                           inputKernelSize=(2,2),
@@ -228,7 +241,10 @@ Layer_3 = PredictiveLayer(inputSize=(8,8),
                           upperHiddenSize=[(2,2), (1,1)],
                           upperKernelSize=[(2,2), (1,1)],
                           upperHiddenChannels=[49, 49],
-                          biasMode=True)
+                          biasMode=True,
+                          neuronType=None,
+                          sparsity=None,
+                          tau=None)
 
 Layer_4 = PredictiveLayer(inputSize=(4,4),
                           inputKernelSize=(2,2),
@@ -237,7 +253,10 @@ Layer_4 = PredictiveLayer(inputSize=(4,4),
                           upperHiddenSize=[(1,1)],
                           upperKernelSize=[(1,1)],
                           upperHiddenChannels=[49],
-                          biasMode=True)
+                          biasMode=True,
+                          neuronType=None,
+                          sparsity=None,
+                          tau=None)
 
 Layer_5 = PredictiveLayer(inputSize=(2,2),
                           inputKernelSize=(2,2),
@@ -246,4 +265,7 @@ Layer_5 = PredictiveLayer(inputSize=(2,2),
                           upperHiddenSize=[],
                           upperKernelSize=[],
                           upperHiddenChannels=[],
-                          biasMode=True)
+                          biasMode=True,
+                          neuronType=None,
+                          sparsity=None,
+                          tau=None)
