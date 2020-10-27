@@ -13,6 +13,7 @@ import numpy as np
 import math
 import cv2
 import itertools
+import copy
 from matplotlib import pyplot as plt
 
 class PredictiveLayer():
@@ -118,7 +119,8 @@ class PredictiveLayer():
 
     # Leaky integrator neuron with ReLU activation
     def LIR(self, input, prevAct, tau):
-        return max(0, tau*input+(1-tau)*prevAct)
+        act = tau*input+(1-tau)*prevAct
+        return max(0, act), act
 
     # Leaky integrator neuron derivative
     def dt_LIR(self, input):
@@ -128,12 +130,17 @@ class PredictiveLayer():
     def LIR_WTA(self, input, prevAct, tau, sparsity):
         # Leaky integrator neuron
         act = tau*input+(1-tau)*prevAct
+        memAct = act.copy()
         # compute full WTA activation
         kp = int(len(act)*sparsity)
         threshold = sorted(act)[kp]
         actSparse = np.array([float(x>=threshold) for x in act])
         actSparse = np.reshape(actSparse, (len(actSparse),1))
-        return np.where(actSparse == 1, act, 0)
+        return np.where(actSparse == 1, act, 0), memAct
+
+    # memory trace
+    def mem_trace(self, input, prevState, tau):
+        return tau*prevState+(1-tau)*input
 
 
     def __init__(self, inputSize, inputKernelSize, recurrentKernelSize, inputChannels, outputChannels, upperHiddenSize, upperKernelSize, upperHiddenChannels, biasMode, neuronType, sparsity, tau):
