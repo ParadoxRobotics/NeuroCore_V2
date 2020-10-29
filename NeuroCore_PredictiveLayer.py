@@ -145,7 +145,6 @@ class PredictiveLayer():
 
     def __init__(self, inputSize, inputKernelSize, recurrentKernelSize, inputChannels, outputChannels, upperHiddenSize, upperKernelSize, upperHiddenChannels, biasMode, neuronType, sparsity, tau):
         super(PredictiveLayer, self).__init__()
-
         # create attribut from the user :
         self.inputSize = inputSize # [H, W]
         self.inputKernelSize = inputKernelSize # [H, W]
