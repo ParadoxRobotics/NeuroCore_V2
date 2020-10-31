@@ -167,7 +167,7 @@ class PredictiveLayer():
             # compute and create internal attribut for the layer :
             # calculate output size (output = [H, w]) corresponding to the hidden representation of the layer
             self.outputSize = self.compute_output_size(self.inputSize, self.inputKernelSize, self.inputKernelSize, paddingMode=False)
-            print("hidden size = ",self.outputSize)
+            print("hidden size =",self.outputSize)
             # calculate weight shape for every I/O of the layer
             # encoder / recurrence / decoder
             self.WInputSize = (self.outputSize[0]*self.outputSize[1]*self.outputChannels, self.inputSize[0]*self.inputSize[1]*self.inputChannels)
@@ -195,10 +195,10 @@ class PredictiveLayer():
                 for i in range(self.numberFeedback):
                     self.WFeedbackIdx.append(sorted(self.kernel_index(self.outputSize, self.upperKernelSize[i], self.upperKernelSize[i], False, self.inputChannels, self.upperHiddenChannels[i])))
 
-            print("encoder input nb weights =", len(self.WInputIdx))
-            print("encoder error nb weights =", len(self.WErrorIdx))
+            print("encoder input nb weights =",len(self.WInputIdx))
+            print("encoder error nb weights =",len(self.WErrorIdx))
             print("encoder recurrent + lateral nb weights =", len(self.WRecurrentIdx))
-            print("decoder output nb weights =", len(self.WDecoderIdx))
+            print("decoder output nb weights =",len(self.WDecoderIdx))
 
             # Create weight vector for the sparse weight matrix
             # encoder / recurrence / decoder
@@ -212,16 +212,19 @@ class PredictiveLayer():
                 self.WFeedback = []
                 for i in range(self.numberFeedback):
                     self.WFeedback.append(self.weight_init_normal(weightSize=self.WFeedbackSize[i][0], weightIndexSize=len(self.WFeedbackIdx[i])))
-                    print("encoder feedback nb weights =", len(self.WFeedbackIdx[i]))
+                    print("encoder feedback",i+1,"nb weights =",len(self.WFeedbackIdx[i]))
 
             # create bias for the hidden layer
             if self.biasMode == True:
                 self.bias = self.bias_init(self.outputSize, self.outputChannels)
 
+            print("\n")
+
         else:
             raise Exception('not same feedback parameters size')
 
 # test
+print("layer 1 description :")
 Layer_1 = PredictiveLayer(inputSize=(96,96),
                           inputKernelSize=(6,6),
                           recurrentKernelSize=(4,4),
@@ -234,6 +237,7 @@ Layer_1 = PredictiveLayer(inputSize=(96,96),
                           sparsity=None,
                           tau=None)
 
+print("layer 2 description :")
 Layer_2 = PredictiveLayer(inputSize=(16,16),
                           inputKernelSize=(2,2),
                           recurrentKernelSize=(4,4),
@@ -246,6 +250,7 @@ Layer_2 = PredictiveLayer(inputSize=(16,16),
                           sparsity=None,
                           tau=None)
 
+print("layer 3 description :")
 Layer_3 = PredictiveLayer(inputSize=(8,8),
                           inputKernelSize=(2,2),
                           recurrentKernelSize=(4,4),
@@ -258,6 +263,7 @@ Layer_3 = PredictiveLayer(inputSize=(8,8),
                           sparsity=None,
                           tau=None)
 
+print("layer 4 description :")
 Layer_4 = PredictiveLayer(inputSize=(4,4),
                           inputKernelSize=(2,2),
                           recurrentKernelSize=(2,2),
@@ -270,6 +276,7 @@ Layer_4 = PredictiveLayer(inputSize=(4,4),
                           sparsity=None,
                           tau=None)
 
+print("layer 5 description :")
 Layer_5 = PredictiveLayer(inputSize=(2,2),
                           inputKernelSize=(2,2),
                           recurrentKernelSize=(1,1),
