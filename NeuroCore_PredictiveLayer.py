@@ -117,6 +117,15 @@ class PredictiveLayer():
         else:
             return lambdaValue
 
+    # columnwise Winner-Take-All activation function
+    def column_WTA(input, size, nbChannels):
+        # reshape the flatten vector to a trasposed channel-wise matrix
+        input = np.reshape(input, (nbChannels, size[0]*size[1])).T
+        # perform WTA operation
+        input = np.where(input == input.max(axis=1, keepdims=True), input, 0)
+        # reshape to initial input shape
+        return np.reshape(input.T, (size[0]*size[1]*nbChannels, 1))
+
     # Leaky integrator neuron with ReLU activation
     def LIR(self, input, prevAct, tau):
         act = tau*input+(1-tau)*prevAct
