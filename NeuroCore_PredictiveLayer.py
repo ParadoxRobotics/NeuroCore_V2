@@ -117,14 +117,29 @@ class PredictiveLayer():
         else:
             return lambdaValue
 
-    # columnwise Winner-Take-All activation function
-    def column_WTA(input, size, nbChannels):
+    # column wise Winner-Take-All activation function
+    def column_WTA(self, input, size, nbChannels):
         # reshape the flatten vector to a trasposed channel-wise matrix
         input = np.reshape(input, (nbChannels, size[0]*size[1])).T
-        # perform WTA operation
+        # find the max in each column and set other to zero
         input = np.where(input == input.max(axis=1, keepdims=True), input, 0)
         # reshape to initial input shape
         return np.reshape(input.T, (size[0]*size[1]*nbChannels, 1))
+
+    # channel wise K% Winner-Take-All activation function
+    def channel_WTA(self, input, size, nbChannels, sparsity):
+        # reshape for channel wise WTA
+        input = np.reshape(input, (nbChannels, size[0]*size[1]))
+        # number of non-max value to get replace by zeros
+        kz = int(size[0]*size[1] - size[0]*size[1]*sparsity)
+        # for every channel
+        for c in range(0, nbChannels):
+            # get k% zero index for the current channel
+            zeroIdx = (input[c,:]).argsort()[:kz]
+            # put zero in the non max value
+            input[c,zeroIdx] = 0
+        # return sparse activation
+        return input
 
     # Leaky integrator neuron with ReLU activation
     def LIR(self, input, prevAct, tau):
@@ -136,16 +151,21 @@ class PredictiveLayer():
         return (input>0)*1
 
     # leaky integrator neuron with global K% winner-take-all
-    def LIR_WTA(self, input, prevAct, tau, sparsity):
+    def LIR_WTA(self, input, prevAct, size, nbChannels, tau, sparsity, WTA_mode):
         # Leaky integrator neuron
         act = tau*input+(1-tau)*prevAct
         memAct = act.copy()
-        # compute full WTA activation
-        kp = int(len(act)*sparsity)
-        threshold = sorted(act)[kp]
-        actSparse = np.array([float(x>=threshold) for x in act])
-        actSparse = np.reshape(actSparse, (len(actSparse),1))
-        return np.where(actSparse == 1, act, 0), memAct
+        # column wise WTA activation
+        if WTA_mode == "column":
+            activation = self.column_WTA(input=act, size=size, nbChannels=nbChannels)
+        # channel wise K% WTA activation
+        elif WTA_mode == "channel":
+            activation = self.channel_WTA(input=act, size=size, nbChannels=nbChannels, sparsity=sparsity)
+        # return only the leaky activation
+        else:
+            activation = act
+        # return final activation and the leaky activation (memory purpose)
+        return activation, memAct
 
     # memory trace
     def mem_trace(self, input, prevState, tau):
@@ -181,9 +201,7 @@ class PredictiveLayer():
             # encoder / recurrence / decoder
             self.WInputSize = (self.outputSize[0]*self.outputSize[1]*self.outputChannels, self.inputSize[0]*self.inputSize[1]*self.inputChannels)
             self.WErrorSize = (self.outputSize[0]*self.outputSize[1]*self.outputChannels, self.inputSize[0]*self.inputSize[1]*self.inputChannels)
-            # replace the recurrent lateral layer by a winner-take-all Leaky integrator neuron
-            if neuronType != 'LIR_WTA' and sparsity == None:
-                self.WRecurrentSize = (self.outputSize[0]*self.outputSize[1]*self.outputChannels, self.outputSize[0]*self.outputSize[1]*self.outputChannels)
+            self.WRecurrentSize = (self.outputSize[0]*self.outputSize[1]*self.outputChannels, self.outputSize[0]*self.outputSize[1]*self.outputChannels)
             self.WDecoderSize = (self.outputSize[0]*self.outputSize[1]*self.outputChannels, self.inputSize[0]*self.inputSize[1]*self.inputChannels)
             # feedback
             if self.numberFeedback != 0:
@@ -195,8 +213,7 @@ class PredictiveLayer():
             # encoder / recurrence / decoder
             self.WInputIdx = sorted(self.kernel_index(self.inputSize, self.inputKernelSize, self.inputKernelSize, False, self.inputChannels, self.outputChannels))
             self.WErrorIdx = sorted(self.kernel_index(self.inputSize, self.inputKernelSize, self.inputKernelSize, False, self.inputChannels, self.outputChannels))
-            if neuronType != 'LIR_WTA' and sparsity == None:
-                self.WRecurrentIdx = sorted(self.kernel_index(self.outputSize, self.recurrentKernelSize, (1,1), True, self.outputChannels, self.outputChannels))
+            self.WRecurrentIdx = sorted(self.kernel_index(self.outputSize, self.recurrentKernelSize, (1,1), True, self.outputChannels, self.outputChannels))
             self.WDecoderIdx = sorted(self.kernel_index(self.inputSize, self.inputKernelSize, self.inputKernelSize, False, self.inputChannels, self.outputChannels))
             # feedback
             if self.numberFeedback != 0:
@@ -213,8 +230,7 @@ class PredictiveLayer():
             # encoder / recurrence / decoder
             self.WInput = self.weight_init_normal(weightSize=self.WInputSize[1], weightIndexSize=len(self.WInputIdx))
             self.WError = self.weight_init_normal(weightSize=self.WErrorSize[1], weightIndexSize=len(self.WErrorIdx))
-            if neuronType != 'LIR_WTA' and sparsity == None:
-                self.WRecurrent = self.weight_init_normal(weightSize=self.WRecurrentSize[1], weightIndexSize=len(self.WRecurrentIdx))
+            self.WRecurrent = self.weight_init_normal(weightSize=self.WRecurrentSize[1], weightIndexSize=len(self.WRecurrentIdx))
             self.WDecoder = self.weight_init_normal(weightSize=self.WDecoderSize[0], weightIndexSize=len(self.WDecoderIdx))
             # feedback
             if self.numberFeedback != 0:
