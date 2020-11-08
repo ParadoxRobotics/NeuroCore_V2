@@ -126,8 +126,23 @@ class PredictiveLayer():
         # reshape to initial input shape
         return np.reshape(input.T, (size[0]*size[1]*nbChannels, 1))
 
+    # column wise K% Winner-Take-All activation function
+    def column_KWTA(self, input, size, nbChannels, sparsity):
+        # reshape for column wise WTA
+        input = np.reshape(input, (nbChannels, size[0]*size[1])).T
+        # number of non-max value to get replace by zeros
+        kz = int(nbChannels - nbChannels*sparsity)
+        # for every column
+        for c in range(0, size[0]*size[1]):
+            # get k% zero index for the current channel
+            zeroIdx = (input[c,:]).argsort()[:kz]
+            # put zero in the non max value
+            input[c, zeroIdx] = 0
+        # return sparse activation
+        return np.reshape(input.T, (size[0]*size[1]*nbChannels, 1))
+
     # channel wise K% Winner-Take-All activation function
-    def channel_WTA(self, input, size, nbChannels, sparsity):
+    def channel_KWTA(self, input, size, nbChannels, sparsity):
         # reshape for channel wise WTA
         input = np.reshape(input, (nbChannels, size[0]*size[1]))
         # number of non-max value to get replace by zeros
@@ -158,9 +173,12 @@ class PredictiveLayer():
         # column wise WTA activation
         if WTA_mode == "column":
             activation = self.column_WTA(input=act, size=size, nbChannels=nbChannels)
+        # column wise K% WTA activation
+        elif WTA_mode == "k_column":
+            activation = self.column_KWTA(input=act, size=size, nbChannels=nbChannels, sparsity=sparsity)
         # channel wise K% WTA activation
-        elif WTA_mode == "channel":
-            activation = self.channel_WTA(input=act, size=size, nbChannels=nbChannels, sparsity=sparsity)
+        elif WTA_mode == "k_channel":
+            activation = self.channel_KWTA(input=act, size=size, nbChannels=nbChannels, sparsity=sparsity)
         # return only the leaky activation
         else:
             activation = act
